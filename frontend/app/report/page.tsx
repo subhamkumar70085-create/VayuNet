@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { submitReport } from '@/lib/api';
@@ -12,10 +12,7 @@ import {
   Upload,
   MapPin,
   Send,
-  Languages,
-  Shield,
   Trash2,
-  Check,
   AlertTriangle,
   ExternalLink,
   Navigation,
@@ -39,6 +36,10 @@ export default function CitizenReportPage() {
   const [language, setLanguage] = useState<LanguageCode>('en');
   const t = translations[language];
 
+  // Camera & File input refs for value reset on image removal
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   // Form State
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
@@ -53,29 +54,60 @@ export default function CitizenReportPage() {
   const [submittedEventId, setSubmittedEventId] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Auto-detect location on mount
+  // Restore language preference safely if previously stored
+  useEffect(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        const saved = localStorage.getItem('vayunet_lang') as LanguageCode | null;
+        if (saved === 'en' || saved === 'hi') {
+          setLanguage(saved);
+        }
+      }
+    } catch (e) {
+      console.warn('Could not read localStorage:', e);
+    }
+  }, []);
+
+  const handleLanguageChange = (lang: LanguageCode) => {
+    setLanguage(lang);
+    try {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('vayunet_lang', lang);
+      }
+    } catch (e) {
+      console.warn('Could not write localStorage:', e);
+    }
+  };
+
+  // Auto-detect location safely on mount
   useEffect(() => {
     detectLocation();
   }, []);
 
   const detectLocation = () => {
-    if (typeof window !== 'undefined' && 'geolocation' in navigator) {
-      setIsLocating(true);
-      setLocationStatus(t.autoDetecting);
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          setLat(Number(pos.coords.latitude.toFixed(5)));
-          setLng(Number(pos.coords.longitude.toFixed(5)));
-          setIsLocating(false);
-          setLocationStatus(null);
-        },
-        (err) => {
-          console.warn('Geolocation error:', err.message);
-          setIsLocating(false);
-          setLocationStatus(null);
-        },
-        { enableHighAccuracy: true, timeout: 8000 }
-      );
+    try {
+      if (typeof window !== 'undefined' && 'geolocation' in navigator) {
+        setIsLocating(true);
+        setLocationStatus(t.autoDetecting);
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            setLat(Number(pos.coords.latitude.toFixed(5)));
+            setLng(Number(pos.coords.longitude.toFixed(5)));
+            setIsLocating(false);
+            setLocationStatus(null);
+          },
+          (err) => {
+            console.warn('Geolocation error:', err.message);
+            setIsLocating(false);
+            setLocationStatus(null);
+          },
+          { enableHighAccuracy: false, timeout: 8000 }
+        );
+      }
+    } catch (err) {
+      console.warn('Geolocation access failed:', err);
+      setIsLocating(false);
+      setLocationStatus(null);
     }
   };
 
@@ -85,6 +117,8 @@ export default function CitizenReportPage() {
       setPhotoFile(file);
       setPhotoPreview(URL.createObjectURL(file));
     }
+    // Clear value to allow re-capturing or selecting the same image
+    e.target.value = '';
   };
 
   const removePhoto = () => {
@@ -93,6 +127,8 @@ export default function CitizenReportPage() {
       URL.revokeObjectURL(photoPreview);
       setPhotoPreview(null);
     }
+    if (cameraInputRef.current) cameraInputRef.current.value = '';
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const handleVoiceTranscript = (text: string) => {
@@ -102,11 +138,7 @@ export default function CitizenReportPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!description.trim() && !photoFile) {
-      setErrorMessage(
-        language === 'hi'
-          ? 'कृपया विवरण लिखें या प्रदूषण की फोटो अपलोड करें'
-          : 'Please enter a description or upload a photo of the incident'
-      );
+      setErrorMessage(t.errorMessageEmpty);
       return;
     }
 
@@ -160,27 +192,29 @@ export default function CitizenReportPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Language Toggle */}
-            <div className="flex items-center bg-slate-100 rounded-full p-0.5 border border-slate-200 text-xs">
+            {/* Accessible Language Switch Buttons */}
+            <div className="flex items-center bg-slate-100 rounded-full p-1 border border-slate-200 text-xs">
               <button
                 type="button"
-                onClick={() => setLanguage('en')}
-                className={`px-2.5 py-1 rounded-full font-semibold transition-all cursor-pointer ${
+                onClick={() => handleLanguageChange('en')}
+                className={`px-3.5 py-1.5 min-h-[36px] min-w-[64px] rounded-full font-semibold transition-all cursor-pointer flex items-center justify-center ${
                   language === 'en'
                     ? 'bg-white text-[#0a2540] shadow-xs'
-                    : 'text-slate-500 hover:text-slate-800'
+                    : 'text-slate-600 hover:text-slate-900 active:bg-slate-200'
                 }`}
+                aria-pressed={language === 'en'}
               >
                 English
               </button>
               <button
                 type="button"
-                onClick={() => setLanguage('hi')}
-                className={`px-2.5 py-1 rounded-full font-semibold transition-all cursor-pointer ${
+                onClick={() => handleLanguageChange('hi')}
+                className={`px-3.5 py-1.5 min-h-[36px] min-w-[64px] rounded-full font-semibold transition-all cursor-pointer flex items-center justify-center ${
                   language === 'hi'
                     ? 'bg-white text-[#0a2540] shadow-xs'
-                    : 'text-slate-500 hover:text-slate-800'
+                    : 'text-slate-600 hover:text-slate-900 active:bg-slate-200'
                 }`}
+                aria-pressed={language === 'hi'}
               >
                 हिंदी
               </button>
@@ -191,7 +225,7 @@ export default function CitizenReportPage() {
               href="/dashboard"
               className="hidden sm:inline-flex items-center gap-1 px-3 py-1.5 rounded border border-slate-300 hover:bg-slate-50 text-xs font-semibold text-slate-700 transition-colors"
             >
-              <span>{language === 'hi' ? 'प्राधिकरण पोर्टल' : 'Authority Portal'}</span>
+              <span>{t.authorityPortal}</span>
               <ExternalLink className="w-3 h-3 text-slate-400" />
             </Link>
           </div>
@@ -214,10 +248,8 @@ export default function CitizenReportPage() {
               <h2 className="text-lg font-bold text-[#0f172a] tracking-tight">
                 {t.reportButton}
               </h2>
-              <p className="text-xs text-[#64748b] mt-1">
-                {language === 'hi'
-                  ? 'नागरिक प्रमाण स्वतः जेमिनी एआई द्वारा संसाधित होकर निकटतम प्रदूषण नियंत्रण प्राधिकरण को प्रेषित किया जाता है।'
-                  : 'Crowdsourced observations are verified with Gemini AI and dispatched to municipal authorities.'}
+              <p className="text-xs text-[#64748b] mt-1 leading-relaxed">
+                {t.reportSubtitle}
               </p>
             </div>
 
@@ -231,9 +263,9 @@ export default function CitizenReportPage() {
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* 1. Photo Capture & Upload */}
               <div className="space-y-2">
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                <span className="block text-xs font-bold uppercase tracking-wider text-slate-700">
                   {t.uploadPhoto}
-                </label>
+                </span>
                 <p className="text-[11px] text-slate-500">{t.photoTip}</p>
 
                 {photoPreview ? (
@@ -247,46 +279,57 @@ export default function CitizenReportPage() {
                     <button
                       type="button"
                       onClick={removePhoto}
-                      className="absolute top-2 right-2 p-1.5 rounded-full bg-slate-900/80 text-white hover:bg-rose-600 transition-colors shadow-sm"
+                      className="absolute top-2 right-2 p-2 rounded-full bg-slate-900/80 text-white hover:bg-rose-600 transition-colors shadow-sm cursor-pointer"
                       title="Remove image"
+                      aria-label="Remove image"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {/* Camera Capture on Mobile */}
-                    <label className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-slate-300 rounded-lg hover:border-[#0a2540] hover:bg-slate-50 transition-all cursor-pointer text-center">
-                      <Camera className="w-6 h-6 text-[#0a2540] mb-1.5" />
-                      <span className="text-xs font-semibold text-slate-800">
-                        {language === 'hi' ? 'कैमरा खोलें' : 'Take Photo (Camera)'}
+                    {/* Camera Capture Control - Pure Semantic Label */}
+                    <label
+                      htmlFor="camera-capture-input"
+                      className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-slate-300 rounded-lg hover:border-[#0a2540] hover:bg-slate-50 active:bg-slate-100 transition-all cursor-pointer text-center w-full select-none"
+                    >
+                      <Camera className="w-6 h-6 text-[#0a2540] mb-1.5 pointer-events-none" />
+                      <span className="text-xs font-semibold text-slate-800 pointer-events-none">
+                        {t.takePhoto}
                       </span>
-                      <span className="text-[10px] text-slate-400 mt-0.5">
-                        {language === 'hi' ? 'मोबाइल कैमरा ऑन करें' : 'Capture live emission'}
+                      <span className="text-[10px] text-slate-400 mt-0.5 pointer-events-none">
+                        {t.takePhotoTip}
                       </span>
                       <input
+                        ref={cameraInputRef}
+                        id="camera-capture-input"
                         type="file"
                         accept="image/*"
                         capture="environment"
                         onChange={handlePhotoChange}
-                        className="hidden"
+                        className="sr-only"
                       />
                     </label>
 
-                    {/* Gallery / File Upload */}
-                    <label className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-slate-300 rounded-lg hover:border-[#0a2540] hover:bg-slate-50 transition-all cursor-pointer text-center">
-                      <Upload className="w-6 h-6 text-slate-500 mb-1.5" />
-                      <span className="text-xs font-semibold text-slate-800">
-                        {language === 'hi' ? 'गैलरी से चुनें' : 'Upload from File'}
+                    {/* Gallery / File Upload Control - Pure Semantic Label */}
+                    <label
+                      htmlFor="file-upload-input"
+                      className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-slate-300 rounded-lg hover:border-[#0a2540] hover:bg-slate-50 active:bg-slate-100 transition-all cursor-pointer text-center w-full select-none"
+                    >
+                      <Upload className="w-6 h-6 text-slate-500 mb-1.5 pointer-events-none" />
+                      <span className="text-xs font-semibold text-slate-800 pointer-events-none">
+                        {t.uploadFile}
                       </span>
-                      <span className="text-[10px] text-slate-400 mt-0.5">
-                        JPEG, PNG, WebP
+                      <span className="text-[10px] text-slate-400 mt-0.5 pointer-events-none">
+                        {t.uploadFileTip}
                       </span>
                       <input
+                        ref={fileInputRef}
+                        id="file-upload-input"
                         type="file"
                         accept="image/*"
                         onChange={handlePhotoChange}
-                        className="hidden"
+                        className="sr-only"
                       />
                     </label>
                   </div>
@@ -298,7 +341,7 @@ export default function CitizenReportPage() {
                 <div className="flex items-center justify-between gap-2 flex-wrap">
                   <label
                     htmlFor="report-description"
-                    className="block text-xs font-bold uppercase tracking-wider text-slate-700"
+                    className="block text-xs font-bold uppercase tracking-wider text-slate-700 cursor-pointer"
                   >
                     {t.describeIssue}
                   </label>
@@ -335,7 +378,7 @@ export default function CitizenReportPage() {
                     className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#0a2540] hover:text-sky-700 transition-colors cursor-pointer"
                   >
                     <Navigation className={`w-3 h-3 ${isLocating ? 'animate-spin' : ''}`} />
-                    <span>{isLocating ? t.autoDetecting : language === 'hi' ? 'पुनः जीपीएस खोजें' : 'Re-detect GPS'}</span>
+                    <span>{isLocating ? t.autoDetecting : t.redetectGps}</span>
                   </button>
                 </div>
 
@@ -349,6 +392,7 @@ export default function CitizenReportPage() {
                 <CitizenLocationMap
                   lat={lat}
                   lng={lng}
+                  helperText={t.manualPinAdjust}
                   onLocationChange={(newLat, newLng) => {
                     setLat(Number(newLat.toFixed(5)));
                     setLng(Number(newLng.toFixed(5)));
@@ -385,9 +429,7 @@ export default function CitizenReportPage() {
                   )}
                 </button>
                 <p className="text-center text-[10px] text-slate-400 mt-2">
-                  {language === 'hi'
-                    ? 'नागरिक संरक्षण अधिनियम के तहत आपकी पहचान गोपनीय रखी जाती है।'
-                    : 'Observations are treated confidentially under public environmental reporting protocols.'}
+                  {t.confidentialityNotice}
                 </p>
               </div>
             </form>

@@ -6,10 +6,20 @@ interface ExplanationBoxProps {
   className?: string;
 }
 
+function sanitizeExplanation(text: string): string {
+  if (!text) return '';
+  return text
+    .replace(/satellite confirms elevated NO2/gi, 'satellite provides corroborating evidence of elevated NO₂')
+    .replace(/satellite confirms elevated NO₂/gi, 'satellite provides corroborating evidence of elevated NO₂')
+    .replace(/\bconfirms\b/gi, 'provides corroborating evidence of');
+}
+
 export const ExplanationBox: React.FC<ExplanationBoxProps> = ({
   explanation,
   className = '',
 }) => {
+  const sanitized = sanitizeExplanation(explanation);
+
   return (
     <div
       className={`rounded-lg border border-sky-200 bg-gradient-to-r from-sky-50/70 via-white to-sky-50/40 p-5 shadow-xs ${className}`}
@@ -32,7 +42,7 @@ export const ExplanationBox: React.FC<ExplanationBoxProps> = ({
 
       <div className="mt-3">
         <p className="text-sm font-medium text-slate-800 leading-relaxed">
-          &ldquo;{explanation}&rdquo;
+          &ldquo;{sanitized}&rdquo;
         </p>
       </div>
 

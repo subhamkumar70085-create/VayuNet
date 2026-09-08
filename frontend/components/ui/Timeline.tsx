@@ -8,6 +8,9 @@ interface TimelineProps {
 }
 
 function formatEventName(eventName: string): string {
+  if (eventName === 'alert_sent') {
+    return 'Alert Routed to Authority';
+  }
   return eventName
     .split('_')
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))

@@ -9,6 +9,7 @@ interface CitizenLocationMapProps {
   lat: number;
   lng: number;
   onLocationChange: (lat: number, lng: number) => void;
+  helperText?: string;
   className?: string;
 }
 
@@ -70,6 +71,7 @@ export const CitizenLocationMap: React.FC<CitizenLocationMapProps> = ({
   lat,
   lng,
   onLocationChange,
+  helperText,
   className = '',
 }) => {
   return (
@@ -107,7 +109,7 @@ export const CitizenLocationMap: React.FC<CitizenLocationMapProps> = ({
       {/* Helper badge overlaid on mini-map */}
       <div className="absolute bottom-2 left-2 z-[1000] bg-white/90 backdrop-blur-xs px-2.5 py-1 rounded border border-slate-200 text-[10px] text-slate-600 font-medium flex items-center gap-1 shadow-xs pointer-events-none">
         <Crosshair className="w-3 h-3 text-[#0a2540]" />
-        <span>Click map or drag pin to adjust spot</span>
+        <span>{helperText || 'Click map or drag pin to adjust spot'}</span>
       </div>
     </div>
   );

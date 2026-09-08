@@ -101,12 +101,12 @@ export default function MapPage() {
       {/* Header */}
       <DashboardHeader
         title="Geospatial Pollution Surveillance"
-        subtitle="Interactive Leaflet Grid • CPCB, Sentinel-5P & Crowdsourced Ingestion"
+        subtitle="Interactive Leaflet Map • CPCB, Sentinel-5P & Citizen Evidence"
         actions={
           <button
             onClick={loadAllEvents}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded border border-slate-300 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors"
-            title="Reload real-time events"
+            title="Refresh surveillance events"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
             <span>Refresh Feed</span>
@@ -132,8 +132,8 @@ export default function MapPage() {
               className="w-full h-full"
             />
 
-            {/* Floating Filter Controls (Top-Right) */}
-            <div className="absolute top-4 right-4 z-[1000] max-w-xl w-[calc(100%-2rem)] sm:w-auto pointer-events-auto">
+            {/* Floating Filter Controls: Desktop panel / Mobile button (Top-Right) */}
+            <div className="absolute top-3.5 right-3.5 sm:top-4 sm:right-4 z-[1000] max-w-xl w-auto pointer-events-auto">
               <MapFilter
                 cities={cities}
                 filterState={filterState}
@@ -145,7 +145,7 @@ export default function MapPage() {
             </div>
 
             {/* Floating Risk Legend (Bottom-Left) */}
-            <div className="absolute bottom-6 left-4 z-[1000] max-w-xs w-full pointer-events-auto">
+            <div className="absolute bottom-6 left-4 z-[1000] max-w-[calc(100%-2rem)] sm:max-w-xs w-auto pointer-events-auto">
               <MapLegend totalEvents={filteredEvents.length} />
             </div>
           </>

@@ -17,6 +17,8 @@ import {
   Home,
 } from 'lucide-react';
 
+import { getEvents } from '@/lib/api';
+
 interface NavItem {
   label: string;
   href: string;
@@ -24,7 +26,7 @@ interface NavItem {
   badge?: string;
 }
 
-const NAV_ITEMS: NavItem[] = [
+const BASE_NAV_ITEMS: Omit<NavItem, 'badge'>[] = [
   {
     label: 'Overview',
     href: '/dashboard',
@@ -59,6 +61,23 @@ interface DashboardSidebarProps {
 export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ className = '' }) => {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState<boolean>(false);
+  const [pendingCount, setPendingCount] = useState<number>(0);
+
+  // Fetch active alerts count from API abstraction
+  useEffect(() => {
+    let mounted = true;
+    getEvents()
+      .then((events) => {
+        if (mounted) {
+          const pending = events.filter((e) => e.response.status === 'pending').length;
+          setPendingCount(pending);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      mounted = false;
+    };
+  }, [pathname]);
 
   // Close mobile sidebar on route transition
   useEffect(() => {
@@ -71,6 +90,13 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ className = 
     }
     return pathname.startsWith(href);
   };
+
+  const navItems: NavItem[] = BASE_NAV_ITEMS.map((item) => {
+    if (item.href === '/dashboard/alerts' && pendingCount > 0) {
+      return { ...item, badge: `${pendingCount} Pending` };
+    }
+    return item;
+  });
 
   const sidebarContent = (
     <aside
@@ -88,7 +114,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ className = 
               VayuNet
             </span>
             <span className="text-[10px] tracking-wider uppercase text-sky-300 font-medium block">
-              Civic AI Intelligence
+              3-City Federated Pilot
             </span>
           </div>
         </Link>
@@ -110,7 +136,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ className = 
           Authority Controls
         </div>
 
-        {NAV_ITEMS.map((item) => {
+        {navItems.map((item) => {
           const active = isLinkActive(item.href);
           return (
             <Link
@@ -155,7 +181,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ className = 
         <div className="bg-[#071a2e] rounded p-3 border border-white/5">
           <div className="flex items-center gap-2 text-xs font-semibold text-slate-200">
             <Shield className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Operational Mode</span>
+            <span>Simulation Mode</span>
           </div>
           <p className="text-[11px] text-slate-400 mt-1">
             CPCB / Sentinel-5P / Gemini Multimodal Fusion Engine
@@ -181,7 +207,10 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ className = 
           <div className="h-7 w-7 rounded bg-sky-500/20 flex items-center justify-center text-sky-300">
             <Activity className="w-4 h-4" />
           </div>
-          <span className="font-bold text-sm tracking-tight">VayuNet Authority</span>
+          <div>
+            <span className="font-bold text-sm tracking-tight block">VayuNet Authority</span>
+            <span className="text-[10px] text-sky-300 block -mt-0.5">3-City Federated Pilot</span>
+          </div>
         </div>
 
         <button

@@ -54,11 +54,11 @@ export const MiniForecastChart: React.FC<MiniForecastChartProps> = ({
           <div className="flex items-center gap-2">
             <TrendingUp className="w-4 h-4 text-[#0a2540]" />
             <h4 className="text-xs font-bold uppercase tracking-wider text-[#0f172a]">
-              PM2.5 Trajectory Projection (6h / 24h / 72h)
+              PM2.5 Forecast (6h / 24h / 72h)
             </h4>
           </div>
           <p className="text-[11px] text-[#64748b] mt-0.5">
-            Forward diffusion vs. WHO (15 µg/m³) & National NAAQS (60 µg/m³)
+            Multi-horizon PM2.5 forecast vs. WHO (15 µg/m³) & National NAAQS (60 µg/m³)
           </p>
         </div>
 
@@ -151,7 +151,7 @@ export const MiniForecastChart: React.FC<MiniForecastChartProps> = ({
         <div className="flex items-center gap-4">
           <span className="flex items-center gap-1.5">
             <span className="h-2 w-2 rounded-full bg-[#0a2540]" />
-            <span>PM2.5 Projection</span>
+            <span>PM2.5 Forecast</span>
           </span>
           <span className="flex items-center gap-1.5">
             <span className="h-2 w-2 rounded-full bg-[#f97316]" />

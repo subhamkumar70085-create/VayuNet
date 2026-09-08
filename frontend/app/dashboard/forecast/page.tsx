@@ -64,7 +64,7 @@ export default function ForecastPage() {
         const points = await getForecast(selectedCity, selectedHorizon);
         setForecastPoints(points);
       } catch (err) {
-        console.error('Failed to load forecast trajectory:', err);
+        console.error('Failed to load forecast data:', err);
       } finally {
         setLoadingForecast(false);
       }
@@ -98,8 +98,8 @@ export default function ForecastPage() {
     <div className="flex flex-col min-h-screen">
       {/* Header */}
       <DashboardHeader
-        title="Pollution Trajectory Forecasts"
-        subtitle="Forward Particulate Diffusion Modelling • 6h, 24h & 72h Multi-Horizon Projections"
+        title="PM2.5 Forecast"
+        subtitle="6h, 24h & 72h PM2.5 forecasts with uncertainty estimates"
       />
 
       <div className="p-6 space-y-6 max-w-7xl mx-auto w-full">
@@ -177,11 +177,11 @@ export default function ForecastPage() {
               <div className="flex items-center gap-2">
                 <TrendingUp className="w-4 h-4 text-[#0a2540]" />
                 <span>
-                  PM2.5 Trajectory Projection: {selectedCity} (+{selectedHorizon}h)
+                  PM2.5 Forecast: {selectedCity} (+{selectedHorizon}h)
                 </span>
               </div>
             }
-            subtitle="Hourly continuous projection vs. Statutory WHO & National NAAQS thresholds"
+            subtitle="Hourly PM2.5 forecast vs. WHO (15 µg/m³) and National NAAQS (60 µg/m³)"
             action={
               currentCityEvent && (
                 <div className="flex items-center gap-2">
@@ -197,7 +197,7 @@ export default function ForecastPage() {
               {loadingForecast ? (
                 <div className="h-full flex flex-col items-center justify-center text-slate-400 text-xs">
                   <div className="h-7 w-7 border-2 border-[#0a2540] border-t-transparent rounded-full animate-spin mb-2" />
-                  <span>Computing forward diffusion trajectory...</span>
+                  <span>Computing PM2.5 forecast...</span>
                 </div>
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
@@ -306,7 +306,7 @@ export default function ForecastPage() {
               <div className="flex items-center gap-5">
                 <span className="flex items-center gap-1.5 font-medium">
                   <span className="h-2.5 w-2.5 rounded-full bg-[#0a2540]" />
-                  <span>PM2.5 Trajectory</span>
+                  <span>PM2.5 Forecast</span>
                 </span>
                 <span className="flex items-center gap-1.5 font-medium">
                   <span className="h-2.5 w-2.5 rounded-full bg-[#22c55e]" />
@@ -319,7 +319,7 @@ export default function ForecastPage() {
               </div>
 
               <span className="text-[11px] font-mono text-slate-400">
-                Resolution: Hourly Step Projection
+                Resolution: Hourly Forecast
               </span>
             </div>
           </CardContent>
@@ -356,7 +356,7 @@ export default function ForecastPage() {
                     </span>
                   </div>
                   <p className="text-xs text-slate-600 mt-1">
-                    Indicates probabilistic probability of sudden micro-plume concentration exceeding baseline within 24h.
+                    Indicates probability of sudden PM2.5 concentration spikes exceeding baseline within 24h.
                   </p>
                 </div>
               </div>
@@ -367,7 +367,7 @@ export default function ForecastPage() {
               </p>
             </div>
 
-            {/* 2. Forward Forecast Uncertainty (Strictly Distinct from Confidence) */}
+            {/* 2. Forecast Uncertainty (Strictly Distinct from Confidence) */}
             <div className="bg-white border border-[#e2e8f0] rounded-lg p-5 shadow-xs flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between">
@@ -383,11 +383,11 @@ export default function ForecastPage() {
                   <div className="flex items-center gap-2">
                     <HelpCircle className="w-5 h-5 text-sky-600" />
                     <span className="text-base font-bold text-[#0f172a]">
-                      Diffusion Model Spread
+                      Forecast Uncertainty
                     </span>
                   </div>
                   <p className="text-xs text-slate-600 mt-1">
-                    Quantifies meteorological forecast variance across the 72h window. Distinct from real-time detection confidence.
+                    Represents forecast variability across the selected time horizon. Distinct from detection confidence.
                   </p>
                 </div>
               </div>
@@ -398,7 +398,7 @@ export default function ForecastPage() {
               </p>
             </div>
 
-            {/* 3. Real-Time Detection Confidence (For Explicit Contrast) */}
+            {/* 3. Detection Confidence (For Explicit Contrast) */}
             <div className="bg-white border border-[#e2e8f0] rounded-lg p-5 shadow-xs flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between">
@@ -414,11 +414,11 @@ export default function ForecastPage() {
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="w-5 h-5 text-emerald-600" />
                     <span className="text-base font-bold text-[#0f172a]">
-                      Real-Time Evidence Verification
+                      Detection Confidence
                     </span>
                   </div>
                   <p className="text-xs text-slate-600 mt-1">
-                    Reflects current evidence corroboration (sensor + satellite + citizen), completely independent of forward model uncertainty.
+                    Reflects current evidence corroboration (sensor + satellite + citizen), completely independent of forecast uncertainty.
                   </p>
                 </div>
               </div>

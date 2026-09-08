@@ -95,6 +95,11 @@ export const StatusStepper: React.FC<StatusStepperProps> = ({
         </h3>
         <p className="text-xs font-mono text-slate-500 mt-1">
           Tracking Token: <strong className="text-slate-800">{eventId}</strong>
+          {eventId.startsWith('evt_citizen_') && (
+            <span className="ml-2 text-[10px] font-sans font-semibold text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+              Simulation Mode
+            </span>
+          )}
         </p>
       </div>
 

@@ -166,7 +166,7 @@ export const SensorEvidenceCard: React.FC<{
         <div className="grid grid-cols-2 gap-2 mb-3">
           <div className="bg-slate-50 rounded p-2.5 border border-slate-200/80">
             <span className="text-[10px] font-semibold uppercase tracking-wider text-[#64748b] block">
-              PM2.5 Real-Time
+              PM2.5 Observation
             </span>
             <span className="text-xl font-bold text-[#0f172a] tabular-telemetry">
               {evidence.pm25}
@@ -176,7 +176,7 @@ export const SensorEvidenceCard: React.FC<{
 
           <div className="bg-slate-50 rounded p-2.5 border border-slate-200/80">
             <span className="text-[10px] font-semibold uppercase tracking-wider text-[#64748b] block">
-              PM10 Real-Time
+              PM10 Observation
             </span>
             <span className="text-xl font-bold text-[#0f172a] tabular-telemetry">
               {evidence.pm10}
@@ -294,7 +294,7 @@ export const WeatherEvidenceCard: React.FC<{
             </div>
             <div>
               <h4 className="text-xs font-bold uppercase tracking-wider text-[#0f172a]">
-                Meteorology & Dispersion
+                Meteorology & Atmospheric Conditions
               </h4>
               <ProvenanceBadge
                 source={evidence.source || 'Weather'}
@@ -333,7 +333,7 @@ export const WeatherEvidenceCard: React.FC<{
 
       <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-[#64748b]">
         <span>
-          Dispersion Condition:{' '}
+          Ventilation Condition:{' '}
           <strong className="text-slate-800 font-semibold">
             {evidence.wind_speed_kmh < 5 ? 'Stagnant (Trap)' : 'Active Venting'}
           </strong>

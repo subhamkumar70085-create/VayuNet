@@ -45,6 +45,23 @@ export default function EventDetailPage() {
     type: 'success' | 'error';
     message: string;
   } | null>(null);
+  const [fromAlerts, setFromAlerts] = useState<boolean>(false);
+  const [returnToAlertsUrl, setReturnToAlertsUrl] = useState<string>('/dashboard/alerts');
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const searchParams = new URLSearchParams(window.location.search);
+    if (searchParams.get('from') === 'alerts') {
+      setFromAlerts(true);
+      const tab = searchParams.get('tab');
+      const q = searchParams.get('q');
+      const queryParams = new URLSearchParams();
+      if (tab) queryParams.set('tab', tab);
+      if (q) queryParams.set('q', q);
+      const queryStr = queryParams.toString();
+      setReturnToAlertsUrl(queryStr ? `/dashboard/alerts?${queryStr}` : '/dashboard/alerts');
+    }
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -84,7 +101,7 @@ export default function EventDetailPage() {
         setEvent(result.event);
         setActionFeedback({
           type: 'success',
-          message: `Authority action "${action.toUpperCase()}" registered successfully (Mock Session State Updated).`,
+          message: `Authority action "${action.toUpperCase()}" registered successfully${result.isSimulation ? ' (Simulation Mode)' : ''}.`,
         });
       }
     } catch (err: unknown) {
@@ -133,13 +150,30 @@ export default function EventDetailPage() {
             <p className="text-xs text-[#64748b] mt-2 mb-6">
               Event identifier &ldquo;{eventId}&rdquo; does not exist in the active monitoring catalog or mock dataset.
             </p>
-            <Link
-              href="/dashboard"
-              className="inline-flex items-center justify-center gap-2 w-full py-2.5 px-4 bg-[#0a2540] hover:bg-[#0f2a3f] text-white text-xs font-semibold rounded transition-colors"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Return to Authority Overview
-            </Link>
+            {fromAlerts ? (
+              <button
+                type="button"
+                onClick={() => {
+                  if (typeof window !== 'undefined' && window.history.length > 1) {
+                    router.back();
+                  } else {
+                    router.push(returnToAlertsUrl);
+                  }
+                }}
+                className="inline-flex items-center justify-center gap-2 w-full py-2.5 px-4 bg-[#0a2540] hover:bg-[#0f2a3f] text-white text-xs font-semibold rounded transition-colors cursor-pointer"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Return to Alert Centre
+              </button>
+            ) : (
+              <Link
+                href="/dashboard"
+                className="inline-flex items-center justify-center gap-2 w-full py-2.5 px-4 bg-[#0a2540] hover:bg-[#0f2a3f] text-white text-xs font-semibold rounded transition-colors"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Return to Authority Overview
+              </Link>
+            )}
           </div>
         </div>
       </div>
@@ -170,13 +204,31 @@ export default function EventDetailPage() {
         title={`Incident Breakdown: ${event.location.city}`}
         subtitle={`Air Basin Incident ID: ${event.event_id} • Surveillance Telemetry`}
         actions={
-          <Link
-            href="/dashboard"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded border border-slate-300 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Back to Dashboard</span>
-          </Link>
+          fromAlerts ? (
+            <button
+              type="button"
+              onClick={() => {
+                if (typeof window !== 'undefined' && window.history.length > 1) {
+                  router.back();
+                } else {
+                  router.push(returnToAlertsUrl);
+                }
+              }}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded border border-slate-300 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
+              title="Return to Alert Surveillance Centre"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Back to Alerts</span>
+            </button>
+          ) : (
+            <Link
+              href="/dashboard"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded border border-slate-300 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Back to Dashboard</span>
+            </Link>
+          )
         }
       />
 
@@ -234,7 +286,7 @@ export default function EventDetailPage() {
             {event.response.alert_sent && (
               <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded bg-rose-50 text-rose-700 border border-rose-200">
                 <FileCheck2 className="w-3.5 h-3.5" />
-                Alert Dispatched
+                Alert Routed
               </span>
             )}
           </div>

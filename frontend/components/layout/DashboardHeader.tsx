@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Radio, Bell, Globe, Clock, ShieldCheck } from 'lucide-react';
+import { getApiStatus, subscribeApiStatus, ApiStatus } from '@/lib/api';
 
 interface DashboardHeaderProps {
   title?: string;
@@ -11,10 +12,11 @@ interface DashboardHeaderProps {
 
 export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   title = 'Authority Environmental Intelligence',
-  subtitle = 'National Air Quality & Hyper-Local Emission Surveillance',
+  subtitle = '3-City Federated Pilot · Pollution Event Monitoring',
   actions,
 }) => {
   const [currentTime, setCurrentTime] = useState<string>('');
+  const [apiStatus, setApiStatus] = useState<ApiStatus>(() => getApiStatus());
 
   useEffect(() => {
     const update = () => {
@@ -28,6 +30,12 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    return subscribeApiStatus((status) => {
+      setApiStatus(status);
+    });
+  }, []);
+
   return (
     <header className="bg-white border-b border-[#e2e8f0] px-6 py-3.5 sticky top-0 z-20 flex flex-wrap items-center justify-between gap-4">
       {/* Title & Basin Context */}
@@ -36,10 +44,27 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
           <h1 className="text-lg font-bold text-[#0f172a] tracking-tight">
             {title}
           </h1>
-          <span className="inline-flex items-center gap-1 text-[11px] font-semibold uppercase px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
-            <Radio className="w-3 h-3 animate-pulse text-emerald-500" />
-            Live Ingestion
-          </span>
+          {apiStatus.isConnected ? (
+            <span
+              className="inline-flex items-center gap-1 text-[11px] font-semibold uppercase px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200"
+              title={`Connected to backend: ${apiStatus.backendUrl}`}
+            >
+              <Radio className="w-3 h-3 text-emerald-600 animate-pulse" />
+              Backend Connected
+            </span>
+          ) : (
+            <span
+              className="inline-flex items-center gap-1 text-[11px] font-semibold uppercase px-2 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200"
+              title={
+                apiStatus.backendConfigured
+                  ? 'Backend unreachable. Running with offline simulation fallback.'
+                  : 'Running in local simulation demo mode'
+              }
+            >
+              <Radio className="w-3 h-3 text-amber-600" />
+              Simulation Mode
+            </span>
+          )}
         </div>
         <p className="text-xs text-[#64748b] mt-0.5">{subtitle}</p>
       </div>

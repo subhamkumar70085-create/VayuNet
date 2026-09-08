@@ -97,7 +97,7 @@ export const ConfidenceGauge: React.FC<ConfidenceGaugeProps> = ({
 
           <div className="mt-3">
             <p className="text-sm font-semibold text-slate-800">
-              Future Diffusion Model Horizon
+              Forecast Horizon
             </p>
             <p className="text-xs text-slate-500 mt-1">
               Spike Probability:{' '}
@@ -110,7 +110,7 @@ export const ConfidenceGauge: React.FC<ConfidenceGaugeProps> = ({
 
         <p className="mt-3 text-[11px] text-[#64748b] flex items-center gap-1 border-t border-slate-100 pt-2">
           <HelpCircle className="w-3.5 h-3.5 text-amber-500" />
-          <span>Represents weather model variability over 72h, distinct from detection confidence.</span>
+          <span>Represents weather/model variability over the 72h forecast horizon, distinct from detection confidence.</span>
         </p>
       </div>
 

@@ -27,17 +27,32 @@ function createRiskIcon(risk: RiskLevel, isSelected: boolean = false) {
   const color = RISK_HEX[risk] || RISK_HEX.LOW;
   const isUrgent = risk === 'CRITICAL' || risk === 'HIGH';
 
+  const size = isSelected ? 36 : 26;
+  const pinSize = isSelected ? 18 : 15;
+
   const html = `
     <div style="
       position: relative;
-      width: 26px;
-      height: 26px;
+      width: ${size}px;
+      height: ${size}px;
       display: flex;
       align-items: center;
       justify-content: center;
+      cursor: pointer;
     ">
       ${
-        isUrgent
+        isSelected
+          ? `<div style="
+              position: absolute;
+              width: ${size}px;
+              height: ${size}px;
+              border-radius: 50%;
+              background-color: ${color};
+              opacity: 0.35;
+              border: 2px solid ${color};
+              box-shadow: 0 0 14px ${color};
+            "></div>`
+          : isUrgent
           ? `<div style="
               position: absolute;
               width: 26px;
@@ -50,13 +65,13 @@ function createRiskIcon(risk: RiskLevel, isSelected: boolean = false) {
           : ''
       }
       <div style="
-        width: 15px;
-        height: 15px;
+        width: ${pinSize}px;
+        height: ${pinSize}px;
         border-radius: 50%;
         background-color: ${color};
-        border: 2px solid #ffffff;
-        box-shadow: 0 2px 5px rgba(10, 37, 64, 0.4);
-        ${isSelected ? 'transform: scale(1.35); outline: 2px solid #0a2540;' : ''}
+        border: ${isSelected ? '2.5px' : '2px'} solid #ffffff;
+        box-shadow: ${isSelected ? '0 0 10px rgba(10, 37, 64, 0.7)' : '0 2px 5px rgba(10, 37, 64, 0.4)'};
+        ${isSelected ? 'outline: 2px solid #0a2540;' : ''}
       "></div>
     </div>
   `;
@@ -64,9 +79,9 @@ function createRiskIcon(risk: RiskLevel, isSelected: boolean = false) {
   return L.divIcon({
     className: 'custom-vayu-pin',
     html,
-    iconSize: [26, 26],
-    iconAnchor: [13, 13],
-    popupAnchor: [0, -14],
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
+    popupAnchor: [0, -size / 2],
   });
 }
 
@@ -97,6 +112,27 @@ const MapBoundsUpdater: React.FC<{ events: PollutionEvent[] }> = ({ events }) =>
   return null;
 };
 
+// Smoothly pans to selected event when selected from feed or map
+const MapSelectionFocuser: React.FC<{
+  events: PollutionEvent[];
+  selectedEventId?: string | null;
+}> = ({ events, selectedEventId }) => {
+  const map = useMap();
+
+  useEffect(() => {
+    if (!selectedEventId) return;
+    const selected = events.find((e) => e.event_id === selectedEventId);
+    if (selected) {
+      map.panTo([selected.location.lat, selected.location.lng], {
+        animate: true,
+        duration: 0.5,
+      });
+    }
+  }, [selectedEventId, events, map]);
+
+  return null;
+};
+
 export const LeafletMap: React.FC<LeafletMapProps> = ({
   events,
   selectedEventId,
@@ -108,13 +144,13 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
   const defaultZoom = 5;
 
   return (
-    <div className={`relative w-full h-full min-h-[550px] overflow-hidden ${className}`}>
+    <div className={`relative w-full h-full min-h-[350px] overflow-hidden ${className}`}>
       <MapContainer
         center={defaultCenter}
         zoom={defaultZoom}
         scrollWheelZoom={true}
         className="w-full h-full"
-        style={{ width: '100%', height: '100%', minHeight: '550px' }}
+        style={{ width: '100%', height: '100%' }}
       >
         {/* OpenStreetMap Standard Basemap - 100% Free, No API Key Required */}
         <TileLayer
@@ -124,6 +160,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
         />
 
         <MapBoundsUpdater events={events} />
+        <MapSelectionFocuser events={events} selectedEventId={selectedEventId} />
 
         {events.map((event) => {
           const isSelected = selectedEventId === event.event_id;
@@ -169,7 +206,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
 
                     {event.evidence?.sensor && (
                       <div className="flex items-center justify-between">
-                        <span className="text-[11px] text-slate-500">PM2.5 Real-Time:</span>
+                        <span className="text-[11px] text-slate-500">PM2.5 Observation:</span>
                         <span className="font-mono font-bold text-slate-900 tabular-telemetry">
                           {event.evidence.sensor.pm25} µg/m³
                         </span>
